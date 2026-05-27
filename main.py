@@ -34,19 +34,35 @@ except ImportError:
 
 
 def _check_api_key():
-    """Validate API key is set before running the pipeline."""
-    if not os.getenv("GOOGLE_API_KEY") and not os.getenv("GEMINI_API_KEY"):
-        print("\nError: No API key found.")
-        print("")
-        print("Option 1 - Create a .env file:")
-        print("  1. Copy .env.example to .env")
-        print("  2. Add your Google API key (free at https://aistudio.google.com/apikey)")
-        print("")
-        print("Option 2 - Set environment variable:")
-        print("  Linux/Mac:  export GOOGLE_API_KEY=your_key_here")
-        print("  Windows:    set GOOGLE_API_KEY=your_key_here")
-        print("  PowerShell: $env:GOOGLE_API_KEY='your_key_here'")
-        sys.exit(1)
+    """Validate provider-specific API keys before running the pipeline."""
+    from src.config import get_model_config
+
+    cfg = get_model_config()
+    provider = os.getenv("DD_MODEL_PROVIDER") or cfg.get("provider", "google")
+
+    if provider == "google":
+        if not os.getenv("GOOGLE_API_KEY") and not os.getenv("GEMINI_API_KEY"):
+            print("\nError: No Google Gemini API key found.")
+            print("")
+            print("Option 1 - Create a .env file:")
+            print("  1. Copy .env.example to .env")
+            print("  2. Add your Google API key (free at https://aistudio.google.com/apikey)")
+            print("")
+            print("Option 2 - Set environment variable:")
+            print("  Linux/Mac:  export GOOGLE_API_KEY=your_key_here")
+            print("  Windows:    set GOOGLE_API_KEY=your_key_here")
+            print("  PowerShell: $env:GOOGLE_API_KEY='your_key_here'")
+            sys.exit(1)
+    elif provider == "openai":
+        if not os.getenv("OPENAI_API_KEY"):
+            print("\nError: No OpenAI API key found.")
+            print("Set OPENAI_API_KEY environment variable.")
+            sys.exit(1)
+    elif provider == "groq":
+        if not os.getenv("GROQ_API_KEY"):
+            print("\nError: No Groq API key found.")
+            print("Set GROQ_API_KEY environment variable.")
+            sys.exit(1)
 
 
 def setup_logging(verbose: bool = False):

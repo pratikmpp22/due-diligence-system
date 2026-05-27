@@ -87,7 +87,7 @@ streamlit run app.py
 | **Contradiction Resolution** | Lead Analyst debates conflicting findings |
 | **Budget Guardrails** | Token ceiling, cost cap, loop detection, timeout enforcement |
 | **PII Detection** | Email, phone, SSN, credit card pattern matching + masking |
-| **Source Grounding** | Every claim must cite a URL - no unsourced assertions |
+| **Source Grounding** | Source-presence checks with warnings for unsourced outputs |
 | **Search Caching** | SQLite-backed with TTL and LRU eviction |
 | **Model Fallback** | Primary -> fallback model chain with exponential backoff |
 | **Cost Tracking** | Per-agent token usage and cost estimation |
@@ -95,7 +95,7 @@ streamlit run app.py
 ## Project Structure
 
 ```
-due-diligence-agent/
+due-diligence-system/
 ├── configs/
 │   └── base.yaml                 # All tunable parameters (single source of truth)
 ├── src/
@@ -119,12 +119,16 @@ due-diligence-agent/
 │   ├── config.py                 # YAML loader with env overrides + caching
 │   └── llm.py                    # LLM factory: Google/OpenAI/Ollama + token tracking
 ├── tests/
-│   ├── test_config.py            # Config loading, env overrides, defaults
-│   ├── test_guardrails.py        # PII detection, budget, loops, disable
+│   ├── test_agents.py            # Specialist agent outputs + fallback behavior
 │   ├── test_calculators.py       # Financial ratios, risk scores, sentiment
-│   ├── test_state.py             # State schema initialization
+│   ├── test_config.py            # Config loading, env overrides, defaults
+│   ├── test_evaluation.py        # Evaluation metrics and scoring logic
 │   ├── test_graph.py             # Graph routing, compilation, guarded nodes
-│   └── test_search.py            # Search cache CRUD, eviction
+│   ├── test_guardrails.py        # PII detection, budget, loops, disable
+│   ├── test_integration.py       # End-to-end graph and pipeline integration
+│   ├── test_llm.py               # LLM provider factory + token tracker behavior
+│   ├── test_search.py            # Search cache CRUD, eviction
+│   └── test_state.py             # State schema initialization
 ├── evaluation/
 │   ├── run_eval.py               # Coverage, source diversity, consistency metrics
 │   └── judge_prompt.py           # LLM-as-judge prompt templates

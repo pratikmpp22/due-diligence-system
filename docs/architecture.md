@@ -69,24 +69,24 @@ The system supports dynamically switching between multiple AI providers via a ce
 
 This allows for hot-swapping models directly from the Streamlit UI or terminal environment variables (`DD_MODEL_PROVIDER` and `DD_MODEL_NAME`) without touching the core orchestration logic.
 
-### 5. Three-Layer Fallback
+### 5. Resilience Stack (Model Fallback + Retries + Degraded Outputs)
 ```
-Layer 1: LLM call with structured output
+Layer 1: Create LLM client with provider/model config
     |
-    v (fails)
-Layer 2: Retry with fallback model (gemini-2.0-flash)
+    v (fails at initialization)
+Layer 2: Retry client creation with fallback model (gemini-2.0-flash)
     |
-    v (fails)
-Layer 3: Return degraded-but-valid output with error metadata
+    v (runtime invoke failures)
+Layer 3: Exponential retry during invoke, then return degraded-but-valid agent output
 ```
 
-Every agent ALWAYS returns valid state, even on total failure. The pipeline never
+Every agent returns valid state updates, even on total failure. The pipeline never
 halts due to a single agent error.
 
 ### 6. Guardrail-Wrapped Execution
 Every agent call passes through pre/post guardrail checks:
 - **Pre**: Token budget, cost ceiling, loop detection, timeout
-- **Post**: PII detection, source grounding, confidence thresholding
+- **Post**: PII detection/masking, source-presence warnings, confidence thresholding
 
 ### 7. Fact-Checking as Architecture
 The Fact Checker is not optional - it's a core pipeline stage. It provides:
@@ -125,7 +125,7 @@ synthesize_report() -> executive_summary, final_report, risk_rating
 ## File Structure
 
 ```
-due-diligence-agent/
+due-diligence-system/
 ├── src/
 │   ├── agents/
 │   │   ├── graph.py              # LangGraph wiring + run_pipeline()
@@ -146,7 +146,7 @@ due-diligence-agent/
 │   │   └── manager.py            # Budget, loops, PII, source grounding
 │   ├── config.py                 # YAML config loader with env overrides
 │   └── llm.py                    # LLM factory with fallback + token tracking
-├── tests/                        # 50+ pytest tests
+├── tests/                        # 99 pytest tests
 ├── evaluation/                   # Coverage, diversity, consistency metrics
 ├── configs/base.yaml             # All tunable parameters
 ├── app.py                        # Streamlit dashboard
